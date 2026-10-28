@@ -30,7 +30,8 @@ afterEach(() => {
 describe('dashboard basics', () => {
   it('shows branding, device, simulation indicator, safe state and empty states', () => {
     mount()
-    expect(screen.getByRole('heading', { name: 'FilamentGuard' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Your filament. Protected.' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /filamentguard/i })).toBeInTheDocument()
     expect(screen.getByText('Smart Filament Storage Monitor')).toBeInTheDocument()
     expect(screen.getByText('Dry Box Unit 01')).toBeInTheDocument()
     expect(screen.getByText('SIMULATION MODE')).toBeInTheDocument()
@@ -242,6 +243,61 @@ describe('accessibility', () => {
   })
 })
 
+describe('Filament Lab redesign', () => {
+  it('has the six-item primary navigation with an active state that follows clicks', async () => {
+    const user = userEvent.setup()
+    mount()
+    const nav = screen.getByRole('navigation', { name: 'Primary' })
+    const labels = within(nav).getAllByRole('link').map((a) => a.textContent)
+    expect(labels).toEqual(['Dashboard', 'Live Monitor', 'Events', 'Device', 'Settings', 'About'])
+    expect(within(nav).getByRole('link', { name: 'Dashboard' })).toHaveAttribute('aria-current', 'location')
+    await user.click(within(nav).getByRole('link', { name: 'Events' }))
+    expect(within(nav).getByRole('link', { name: 'Events' })).toHaveAttribute('aria-current', 'location')
+    expect(within(nav).getByRole('link', { name: 'Dashboard' })).not.toHaveAttribute('aria-current')
+    for (const id of ['dashboard', 'monitor', 'events', 'device', 'settings', 'about']) expect(document.getElementById(id)).not.toBeNull()
+  })
+
+  it('states honestly that simulation mode has no physical sensor', () => {
+    mount()
+    expect(screen.getByTestId('mode-explainer')).toHaveTextContent(/no physical sensor is connected/i)
+    expect(screen.getByText(/schematic illustration, not a photo of the prototype/i)).toBeInTheDocument()
+  })
+
+  it('dry-box illustration and box check follow the monitoring state, never showing invalid data as safe', async () => {
+    const user = userEvent.setup()
+    mount()
+    const ill = () => screen.getByTestId('drybox-illustration').getAttribute('data-status')
+    expect(ill()).toBe('safe')
+    await user.click(screen.getByRole('button', { name: /trigger breach/i }))
+    expect(ill()).toBe('breach')
+    expect(screen.getByTestId('drybox-state')).toHaveTextContent('Over the limit')
+    await user.click(screen.getByRole('button', { name: /sensor fault/i }))
+    expect(ill()).toBe('unavailable')
+    expect(screen.getByTestId('drybox-state')).toHaveTextContent('Reading unavailable')
+    expect(screen.getByTestId('drybox-illustration')).toHaveAccessibleName(/reading unavailable/i)
+  })
+
+  it('shows the selected material profile and provisional limit', async () => {
+    const user = userEvent.setup()
+    mount()
+    expect(screen.getByTestId('selected-material-summary')).toHaveTextContent('PLA')
+    expect(screen.getByTestId('selected-material-summary')).toHaveTextContent('35% RH')
+    expect(screen.getByTestId('selected-material-summary')).toHaveTextContent(/provisional/i)
+    await user.selectOptions(screen.getByLabelText('Stored material'), 'Nylon')
+    expect(screen.getByTestId('selected-material-summary')).toHaveTextContent('15% RH')
+  })
+
+  it('uses distinct non-colour cues per status (title text and dashed border for errors)', async () => {
+    const user = userEvent.setup()
+    mount()
+    const banner = screen.getByTestId('status-banner')
+    expect(banner).toHaveTextContent('SAFE')
+    await user.click(screen.getByRole('button', { name: /sensor fault/i }))
+    expect(banner).toHaveTextContent('SENSOR DATA ERROR')
+    expect(banner.className).toContain('border-dashed')
+  })
+})
+
 describe('CSV export', () => {
   it('13. downloads a CSV containing the recorded event', async () => {
     const user = userEvent.setup()
@@ -275,11 +331,11 @@ describe('live durations and responsive layout', () => {
     act(() => void vi.advanceTimersByTime(1000))
     expect(rows()[0]).toHaveTextContent('1m 05s')
   })
-  it('uses responsive containers: scrollable table wrapper, stacking grids, 4-column mobile nav', () => {
+  it('uses responsive containers: scrollable table wrapper, stacking grids, 3-column mobile nav', () => {
     mount()
     fireEvent.click(screen.getByRole('button', { name: /trigger breach/i }))
     expect(screen.getByTestId('events-table').parentElement).toHaveClass('overflow-x-auto')
-    expect(screen.getByRole('navigation', { name: 'Primary' })).toHaveClass('grid-cols-4')
-    expect(screen.getByTestId('humidity-card').parentElement).toHaveClass('grid-cols-1', 'sm:grid-cols-2')
+    expect(screen.getByRole('navigation', { name: 'Primary' })).toHaveClass('grid-cols-3')
+    expect(screen.getByTestId('humidity-card').parentElement).toHaveClass('grid-cols-1', 'md:grid-cols-5')
   })
 })

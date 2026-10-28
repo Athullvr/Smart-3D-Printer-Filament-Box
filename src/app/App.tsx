@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { AlertCircle, FlaskConical, ShieldCheck } from 'lucide-react'
+import { AlertCircle, FlaskConical } from 'lucide-react'
+import { BrandMark } from '../components/BrandMark'
+import { Hero } from '../features/dashboard/Hero'
+import { useActiveSection } from '../hooks/useActiveSection'
 import { Card, ConfirmDialog, Pill } from '../components/ui'
 import { useFilamentGuard, useHardware, useSimulator } from '../hooks/useFilamentGuard'
 import type { SourceMode } from '../types'
 import { HttpSensorProvider } from '../services/sensor/httpSensor'
 import type { SensorProvider } from '../services/sensor/types'
-import { SourceToggle } from '../features/hardware/SourceToggle'
 import { DevicePanel } from '../features/hardware/DevicePanel'
 import type { SimulatedSensorProvider } from '../services/sensor/simulatedSensor'
 import type { StorageService } from '../services/storage/storage'
@@ -17,11 +19,14 @@ import { MaterialSettings } from '../features/settings/MaterialSettings'
 import { EventHistory, ExportButton } from '../features/events/EventHistory'
 
 const NAV = [
-  { href: '#dashboard', label: 'Dashboard' },
-  { href: '#events', label: 'Events' },
-  { href: '#settings', label: 'Settings' },
-  { href: '#source', label: 'Data source' },
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'monitor', label: 'Live Monitor' },
+  { id: 'events', label: 'Events' },
+  { id: 'device', label: 'Device' },
+  { id: 'settings', label: 'Settings' },
+  { id: 'about', label: 'About' },
 ]
+const NAV_IDS = NAV.map((n) => n.id)
 
 const fallbackHardware = new HttpSensorProvider()
 
@@ -52,67 +57,79 @@ export function App({ sensor, hardware, storage, clock }: AppProps) {
     if (hardware?.setUrl(url)) saveConnection(mode, url)
   }
 
+  const [activeSection, setActiveSection] = useActiveSection(NAV_IDS)
+
   return (
     <div className="min-h-screen">
-      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-sensor focus:px-3 focus:py-2 focus:text-ink-950">Skip to content</a>
-      <header className="lg:sticky lg:top-0 z-40 border-b border-ink-700 bg-ink-900/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
-          <div className="flex items-center gap-2.5">
-            <ShieldCheck className="h-7 w-7 text-sensor" aria-hidden />
-            <div className="leading-tight">
-              <h1 className="text-base font-semibold">FilamentGuard</h1>
-              <p className="text-xs text-slate-400">Smart Filament Storage Monitor</p>
-            </div>
-          </div>
-          <nav aria-label="Primary" className="order-3 grid w-full grid-cols-4 gap-1 text-center text-xs sm:order-none sm:flex sm:w-auto sm:text-sm">
-            {NAV.map((n) => <a key={n.href} href={n.href} className="rounded px-2.5 py-2 text-slate-300 hover:bg-ink-800 hover:text-white">{n.label}</a>)}
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-filament focus:px-3 focus:py-2 focus:font-semibold focus:text-graphite">Skip to content</a>
+      <header data-surface="dark" className="z-40 bg-charcoal text-ivory lg:sticky lg:top-0">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
+          <a href="#dashboard" className="flex items-center gap-2.5" onClick={() => setActiveSection('dashboard')}>
+            <BrandMark />
+            <span className="font-display text-2xl font-bold tracking-tight text-ivory">FilamentGuard</span>
+          </a>
+          <nav aria-label="Primary" className="order-3 grid w-full grid-cols-3 gap-1 text-center text-sm lg:order-none lg:flex lg:w-auto">
+            {NAV.map((n) => {
+              const current = activeSection === n.id
+              return (
+                <a key={n.id} href={`#${n.id}`} aria-current={current ? 'location' : undefined} onClick={() => setActiveSection(n.id)}
+                  className={`flex min-h-11 items-center justify-center rounded px-3 py-2 transition-colors ${current ? 'bg-filament font-semibold text-graphite' : 'text-ivory hover:bg-white/10'}`}>
+                  {n.label}
+                </a>
+              )
+            })}
           </nav>
           <div className="ml-auto flex flex-wrap items-center gap-2">
-            <span className="text-sm text-slate-300">Dry Box Unit 01</span>
-            <span className="inline-flex items-center gap-1.5 rounded border border-warn/50 bg-warn/10 px-2 py-1 text-xs font-semibold tracking-wider text-warn">
+            <span className="text-sm text-[#B9BDB4]">Unit: <span className="font-medium text-ivory">Dry Box Unit 01</span></span>
+            <span className="inline-flex items-center gap-1.5 rounded-sm border border-filament px-2 py-1 text-xs font-bold tracking-wider text-filament">
               <FlaskConical className="h-3.5 w-3.5" aria-hidden />{isHardware ? 'HARDWARE MODE (UNVERIFIED)' : 'SIMULATION MODE'}
             </span>
           </div>
         </div>
       </header>
 
-      <main id="main" tabIndex={-1} className="mx-auto max-w-6xl space-y-4 px-4 py-4">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-6xl space-y-6 px-4 py-6 focus:outline-none">
         {fg.storageMessages.length > 0 && (
-          <div role="alert" data-testid="storage-warning" className="flex items-start gap-2 rounded-lg border border-warn/40 bg-warn/10 p-3 text-sm text-warn">
+          <div role="alert" data-testid="storage-warning" className="flex items-start gap-2 rounded-md border border-dashed border-filament-ink bg-filament-tint p-3 text-sm text-filament-ink">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
             <ul>{fg.storageMessages.map((m) => <li key={m}>{m}</li>)}</ul>
           </div>
         )}
 
-        <div id="dashboard" className="space-y-4">
-          <StatusBanner monitor={state.monitor} settings={state.settings} onAcknowledge={fg.acknowledge} hardware={isHardware} />
-          <MetricCards monitor={state.monitor} settings={state.settings} hardware={isHardware} />
-          <Card title="Humidity over time" subtitle={`Recent ${isHardware ? 'hardware-feed' : 'simulated'} readings (last 120 samples)`}>
-            <HumidityChart samples={state.samples} settings={state.settings} hardware={isHardware} />
-          </Card>
-        </div>
+        <Hero monitor={state.monitor} settings={state.settings} mode={mode} hardwareAvailable={!!hardware} onMode={switchMode} />
+        <StatusBanner monitor={state.monitor} settings={state.settings} onAcknowledge={fg.acknowledge} hardware={isHardware} />
+        <MetricCards monitor={state.monitor} settings={state.settings} hardware={isHardware} />
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Card id="settings" title="Material & thresholds" subtitle="Per-material humidity limits">
-            <MaterialSettings settings={state.settings} onMaterial={fg.setMaterial} onThreshold={fg.setThreshold} />
-          </Card>
-          <Card id="source" title={isHardware ? 'Hardware sensor' : 'Sensor simulator'}
-            subtitle={isHardware ? 'Polls an HTTP endpoint using the sensor reading contract' : 'Feeds the same monitoring engine a physical sensor will use'}
-            action={<Pill tone="warn">{isHardware ? 'MOCK-TESTED ONLY' : 'NO HARDWARE'}</Pill>}>
-            <div className="space-y-4">
-              {hardware && <SourceToggle mode={mode} hardwareAvailable={!!hardware} onChange={switchMode} />}
-              {isHardware
-                ? <DevicePanel state={hw} onApplyUrl={applyUrl} onReset={() => setConfirmReset(true)} />
-                : <SimulatorPanel provider={sensor} sim={sim} settings={state.settings} onReset={() => setConfirmReset(true)} />}
-            </div>
-          </Card>
-        </div>
+        <Card id="monitor" title="Live monitor" subtitle={`Humidity history from the ${isHardware ? 'hardware feed' : 'simulator'}, last 120 samples`}>
+          <HumidityChart samples={state.samples} settings={state.settings} hardware={isHardware} />
+        </Card>
 
-        <Card id="events" title="Breach event history" subtitle={`${state.monitor.events.length} event(s) recorded`} action={<ExportButton events={state.monitor.events} now={now} />}>
+        <Card id="events" title="Recent events" subtitle={`${state.monitor.events.length} breach event(s) recorded, newest first`} action={<ExportButton events={state.monitor.events} now={now} />}>
           <EventHistory events={state.monitor.events} now={now} />
         </Card>
 
-        <footer className="pb-6 pt-2 text-center text-xs text-slate-400">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card id="device" title={isHardware ? 'Device and quick actions' : 'Quick actions'}
+            subtitle={isHardware ? 'Hardware sensor polled over HTTP' : 'Sensor simulator: feeds the same engine a physical sensor will use'}
+            action={<Pill tone="warn">{isHardware ? 'MOCK-TESTED ONLY' : 'NO HARDWARE'}</Pill>}>
+            {isHardware
+              ? <DevicePanel state={hw} onApplyUrl={applyUrl} onReset={() => setConfirmReset(true)} />
+              : <SimulatorPanel provider={sensor} sim={sim} settings={state.settings} onReset={() => setConfirmReset(true)} />}
+          </Card>
+          <Card id="settings" title="Material and thresholds" subtitle="Humidity limit for each filament profile">
+            <MaterialSettings settings={state.settings} onMaterial={fg.setMaterial} onThreshold={fg.setThreshold} />
+          </Card>
+        </div>
+
+        <Card id="about" title="About this prototype" subtitle="FilamentGuard, milestone 1 (EDIS capstone)">
+          <div className="grid gap-4 text-sm leading-relaxed text-graphite md:grid-cols-3">
+            <p><strong className="font-semibold">What it does.</strong> Evaluates each humidity reading against the limit of the stored material, opens one event per breach, keeps the peak, and closes it when conditions recover. Events and settings persist in this browser.</p>
+            <p><strong className="font-semibold">What is provisional.</strong> Material limits are demonstration values you can edit, not universal safety limits. The hardware path is tested against a mock endpoint only.</p>
+            <p><strong className="font-semibold">What stays on the device.</strong> Real protection must come from firmware alerts on the ESP32. This page is a read-only viewer, and acknowledging here does not silence a physical buzzer.</p>
+          </div>
+        </Card>
+
+        <footer className="pb-6 pt-2 text-center text-sm text-muted-ink">
           {isHardware
             ? 'FilamentGuard prototype: hardware mode reads an HTTP endpoint that has only been tested against a mock. No real ESP32 or DHT11 has been verified.'
             : 'FilamentGuard prototype: all data is simulated. No ESP32 or DHT11 hardware is connected.'}

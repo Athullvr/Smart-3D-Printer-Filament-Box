@@ -3,7 +3,7 @@ import { MATERIALS, type Material, type Settings } from '../../types'
 import { Pill } from '../../components/ui'
 import { isValidThreshold, THRESHOLD_MAX, THRESHOLD_MIN } from './defaults'
 
-function ThresholdInput({ material, value, onCommit }: { material: Material; value: number; onCommit: (v: number) => void }) {
+function ThresholdInput({ material, value, selected, onCommit }: { material: Material; value: number; selected: boolean; onCommit: (v: number) => void }) {
   const [draft, setDraft] = useState<string | null>(null)
   const text = draft ?? String(value)
   const parsed = text.trim() === '' ? NaN : Number(text)
@@ -11,9 +11,9 @@ function ThresholdInput({ material, value, onCommit }: { material: Material; val
   const errorId = `threshold-error-${material}`
 
   return (
-    <div>
-      <div className="flex items-center gap-2">
-        <label htmlFor={`threshold-${material}`} className="w-14 text-sm text-slate-300">{material}</label>
+    <div className={`rounded-md border px-3 py-2 ${selected ? 'border-graphite bg-ivory' : 'border-transparent'}`}>
+      <div className="flex flex-wrap items-center gap-2">
+        <label htmlFor={`threshold-${material}`} className="w-14 text-sm font-medium text-graphite">{material}</label>
         <input id={`threshold-${material}`} type="number" inputMode="decimal" min={THRESHOLD_MIN} max={THRESHOLD_MAX} step={1} value={text}
           aria-invalid={invalid} aria-describedby={invalid ? errorId : undefined}
           onChange={(e) => setDraft(e.target.value)}
@@ -22,10 +22,11 @@ function ThresholdInput({ material, value, onCommit }: { material: Material; val
             if (draft !== null && isValidThreshold(parsed)) onCommit(parsed)
             setDraft(null)
           }}
-          className={`w-24 rounded-md border bg-ink-900 px-2 py-1.5 font-mono text-sm ${invalid ? 'border-breach' : 'border-ink-600'}`} />
-        <span className="text-sm text-slate-400">% RH</span>
+          className={`min-h-11 w-24 rounded-md border bg-white px-2 py-1.5 font-mono text-base text-graphite ${invalid ? 'border-danger-ink border-2' : 'border-graphite/40'}`} />
+        <span className="text-sm text-muted-ink">% RH</span>
+        {selected && <span className="ml-auto"><Pill tone="warn">IN USE</Pill></span>}
       </div>
-      {invalid && <p id={errorId} role="alert" className="mt-1 text-xs text-breach">Enter a number from {THRESHOLD_MIN} to {THRESHOLD_MAX}. Value will not be applied.</p>}
+      {invalid && <p id={errorId} role="alert" className="mt-1 text-sm font-medium text-danger-ink">Enter a number from {THRESHOLD_MIN} to {THRESHOLD_MAX}. Value will not be applied.</p>}
     </div>
   )
 }
@@ -36,21 +37,24 @@ export function MaterialSettings({ settings, onMaterial, onThreshold }: {
   return (
     <div className="space-y-4">
       <div>
-        <label htmlFor="material-select" className="mb-1 block text-sm text-slate-300">Stored material</label>
+        <label htmlFor="material-select" className="mb-1 block text-sm font-medium text-graphite">Stored material</label>
         <select id="material-select" value={settings.material} onChange={(e) => onMaterial(e.target.value as Material)}
-          className="w-full rounded-md border border-ink-600 bg-ink-900 px-2 py-2 text-sm">
+          className="min-h-11 w-full rounded-md border border-graphite/40 bg-white px-3 py-2 text-base text-graphite">
           {MATERIALS.map((m) => <option key={m} value={m}>{m}</option>)}
         </select>
+        <p className="mt-2 text-sm text-muted-ink" data-testid="selected-material-summary">
+          Selected profile: <span className="font-semibold text-graphite">{settings.material}</span>, alert above <span className="font-mono font-semibold text-graphite">{settings.thresholds[settings.material]}% RH</span> (provisional demonstration value)
+        </p>
       </div>
       <div>
         <div className="mb-2 flex items-center justify-between">
-          <h3 className="text-sm text-slate-300">Humidity thresholds</h3>
+          <h3 className="font-display text-lg font-semibold text-graphite">Humidity thresholds</h3>
           <Pill tone="warn">PROVISIONAL</Pill>
         </div>
-        <div className="space-y-2">
-          {MATERIALS.map((m) => <ThresholdInput key={m} material={m} value={settings.thresholds[m]} onCommit={(v) => onThreshold(m, v)} />)}
+        <div className="space-y-1">
+          {MATERIALS.map((m) => <ThresholdInput key={m} material={m} value={settings.thresholds[m]} selected={m === settings.material} onCommit={(v) => onThreshold(m, v)} />)}
         </div>
-        <p className="mt-3 text-xs text-slate-400">
+        <p className="mt-3 text-sm text-muted-ink">
           Demonstration values only, not universal safety limits. Breach when humidity is strictly greater than the threshold; equal is safe.
           Changing a threshold never alters existing events.
         </p>

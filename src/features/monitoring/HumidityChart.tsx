@@ -14,30 +14,30 @@ export function HumidityChart({ samples, settings, hardware = false }: { samples
 
   return (
     <div>
-      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
+      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-graphite">
         <Pill tone="sensor">{hardware ? 'HARDWARE FEED (UNVERIFIED)' : 'SIMULATED DATA'}</Pill>
-        <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-sensor" />Humidity history ({history.length})</span>
-        <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full border-2 border-white bg-sensor" />Current</span>
-        <span className="flex items-center gap-1.5"><span className="w-4 border-t-2 border-dashed border-breach" />{settings.material} limit {threshold}% RH</span>
+        <span className="flex items-center gap-1.5"><span className="h-1 w-5 rounded-full bg-filament" />Humidity history ({history.length})</span>
+        <span className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full border-2 border-graphite bg-filament" />Current</span>
+        <span className="flex items-center gap-1.5"><span className="w-5 border-t-2 border-dashed border-danger-ink" />{settings.material} limit {threshold}% RH</span>
       </div>
       {samples.length === 0 ? (
-        <div className="flex h-64 items-center justify-center rounded-md border border-dashed border-ink-600 text-center text-sm text-slate-400" data-testid="chart-empty">
+        <div className="flex h-64 items-center justify-center rounded-md border border-dashed border-muted bg-ivory px-4 text-center text-sm text-muted-ink" data-testid="chart-empty">
           No humidity readings yet. Readings from the active source will appear here.
         </div>
       ) : (
         <div className="h-64 w-full sm:h-72" data-testid="humidity-chart" role="img" aria-label={`Line chart of ${samples.length} humidity readings against the ${settings.material} limit of ${threshold} percent RH. Latest: ${current?.humidity.toFixed(1)} percent RH.`}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 8, right: 16, bottom: 20, left: 4 }}>
-              <CartesianGrid stroke="#1e2a44" strokeDasharray="3 3" />
-              <XAxis dataKey="t" type="number" scale="time" domain={xDomain} allowDataOverflow tickFormatter={formatTime} stroke="#64748b" tick={{ fontSize: 11 }} minTickGap={40}
-                label={{ value: 'Time (local)', position: 'insideBottom', offset: -12, fill: '#94a3b8', fontSize: 11 }} />
-              <YAxis domain={[0, 100]} stroke="#64748b" tick={{ fontSize: 11 }} width={44}
-                label={{ value: 'Humidity (% RH)', angle: -90, position: 'insideLeft', fill: '#94a3b8', fontSize: 11, style: { textAnchor: 'middle' } }} />
-              <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #2c3b5c', fontSize: 12 }} labelFormatter={(v) => formatTime(Number(v))}
+              <CartesianGrid stroke="#e7e0d2" strokeDasharray="3 3" />
+              <XAxis dataKey="t" type="number" scale="time" domain={xDomain} allowDataOverflow tickFormatter={formatTime} stroke="#858982" tick={{ fontSize: 12, fill: '#5c615b' }} minTickGap={40}
+                label={{ value: 'Time (local)', position: 'insideBottom', offset: -12, fill: '#5c615b', fontSize: 12 }} />
+              <YAxis domain={[0, 100]} stroke="#858982" tick={{ fontSize: 12, fill: '#5c615b' }} width={44}
+                label={{ value: 'Humidity (% RH)', angle: -90, position: 'insideLeft', fill: '#5c615b', fontSize: 12, style: { textAnchor: 'middle' } }} />
+              <Tooltip contentStyle={{ background: '#fffcf7', border: '1px solid #202522', borderRadius: 4, color: '#202522', fontSize: 13 }} labelFormatter={(v) => formatTime(Number(v))}
                 formatter={(v) => [`${Number(v).toFixed(1)} % RH`, 'Humidity']} />
-              <ReferenceLine y={threshold} stroke="#fb7185" strokeDasharray="6 4" strokeWidth={1.5} />
-              <Line type="monotone" dataKey="humidity" stroke="#22d3ee" strokeWidth={2} dot={false} isAnimationActive={false} />
-              {current && <ReferenceDot x={current.timestamp} y={current.humidity} r={5} fill="#22d3ee" stroke="#fff" strokeWidth={2} ifOverflow="visible" />}
+              <ReferenceLine y={threshold} stroke="#b3322a" strokeDasharray="6 4" strokeWidth={2} />
+              <Line type="monotone" dataKey="humidity" stroke="#f47721" strokeWidth={3} dot={false} isAnimationActive={false} />
+              {current && <ReferenceDot x={current.timestamp} y={current.humidity} r={6} fill="#f47721" stroke="#202522" strokeWidth={2.5} ifOverflow="visible" />}
             </LineChart>
           </ResponsiveContainer>
         </div>
