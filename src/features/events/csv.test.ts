@@ -24,6 +24,11 @@ describe('csv export', () => {
     const e: BreachEvent = { ...base, endedAt: base.startedAt + 1999 }
     expect(eventsToCsv([e], 0).split('\r\n')[1]!.split(',')[4]).toBe('1')
   })
+  it('records the actual data source of each event', () => {
+    const rows = eventsToCsv([{ ...base, source: 'esp32-dht11' }, base], 0).trim().split('\r\n')
+    expect(rows[1]!.endsWith(',esp32-dht11')).toBe(true)
+    expect(rows[2]!.endsWith(',simulated')).toBe(true)
+  })
   it('escapes commas, quotes and newlines', () => {
     expect(escapeCsv('a,b')).toBe('"a,b"')
     expect(escapeCsv('say "hi"')).toBe('"say ""hi"""')

@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import { AlertCircle, FlaskConical, ShieldCheck } from 'lucide-react'
 import { Card, ConfirmDialog, Pill } from '../components/ui'
-import { useFilamentGuard, useSimulator } from '../hooks/useFilamentGuard'
+import { useFilamentGuard, useHardware, useSimulator } from '../hooks/useFilamentGuard'
+import type { SourceMode } from '../types'
+import { HttpSensorProvider } from '../services/sensor/httpSensor'
+import type { SensorProvider } from '../services/sensor/types'
+import { SourceToggle } from '../features/hardware/SourceToggle'
+import { DevicePanel } from '../features/hardware/DevicePanel'
 import type { SimulatedSensorProvider } from '../services/sensor/simulatedSensor'
 import type { StorageService } from '../services/storage/storage'
 import { StatusBanner } from '../features/monitoring/StatusBanner'
@@ -15,20 +20,37 @@ const NAV = [
   { href: '#dashboard', label: 'Dashboard' },
   { href: '#events', label: 'Events' },
   { href: '#settings', label: 'Settings' },
-  { href: '#simulator', label: 'Simulator' },
+  { href: '#source', label: 'Data source' },
 ]
+
+const fallbackHardware = new HttpSensorProvider()
 
 export interface AppProps {
   sensor: SimulatedSensorProvider
+  /** Optional hardware (HTTP) provider; without it the app is simulation-only. */
+  hardware?: HttpSensorProvider
   storage: StorageService
   clock?: () => number
 }
 
-export function App({ sensor, storage, clock }: AppProps) {
+export function App({ sensor, hardware, storage, clock }: AppProps) {
   const [confirmReset, setConfirmReset] = useState(false)
-  const fg = useFilamentGuard({ sensor, storage, clock, onReset: () => sensor.reset() })
+  const [mode, setMode] = useState<SourceMode>(() => (hardware && storage.load().connection.mode === 'hardware' ? 'hardware' : 'simulation'))
+  const isHardware = mode === 'hardware' && !!hardware
+  const active: SensorProvider = isHardware ? hardware : sensor
+  const fg = useFilamentGuard({ sensor: active, storage, clock, onReset: () => { if (!isHardware) sensor.reset() } })
   const sim = useSimulator(sensor, storage)
   const { state, now } = fg
+  const hw = useHardware(hardware ?? fallbackHardware)
+
+  const saveConnection = (m: SourceMode, endpointUrl: string) => storage.saveConnection({ mode: m, endpointUrl })
+  const switchMode = (m: SourceMode) => {
+    setMode(m)
+    if (hardware) saveConnection(m, hardware.getState().url)
+  }
+  const applyUrl = (url: string) => {
+    if (hardware?.setUrl(url)) saveConnection(mode, url)
+  }
 
   return (
     <div className="min-h-screen">
@@ -48,7 +70,7 @@ export function App({ sensor, storage, clock }: AppProps) {
           <div className="ml-auto flex flex-wrap items-center gap-2">
             <span className="text-sm text-slate-300">Dry Box Unit 01</span>
             <span className="inline-flex items-center gap-1.5 rounded border border-warn/50 bg-warn/10 px-2 py-1 text-xs font-semibold tracking-wider text-warn">
-              <FlaskConical className="h-3.5 w-3.5" aria-hidden />SIMULATION MODE
+              <FlaskConical className="h-3.5 w-3.5" aria-hidden />{isHardware ? 'HARDWARE MODE (UNVERIFIED)' : 'SIMULATION MODE'}
             </span>
           </div>
         </div>
@@ -63,10 +85,10 @@ export function App({ sensor, storage, clock }: AppProps) {
         )}
 
         <div id="dashboard" className="space-y-4">
-          <StatusBanner monitor={state.monitor} settings={state.settings} onAcknowledge={fg.acknowledge} />
-          <MetricCards monitor={state.monitor} settings={state.settings} />
-          <Card title="Humidity over time" subtitle="Recent simulated readings (last 120 samples)">
-            <HumidityChart samples={state.samples} settings={state.settings} />
+          <StatusBanner monitor={state.monitor} settings={state.settings} onAcknowledge={fg.acknowledge} hardware={isHardware} />
+          <MetricCards monitor={state.monitor} settings={state.settings} hardware={isHardware} />
+          <Card title="Humidity over time" subtitle={`Recent ${isHardware ? 'hardware-feed' : 'simulated'} readings (last 120 samples)`}>
+            <HumidityChart samples={state.samples} settings={state.settings} hardware={isHardware} />
           </Card>
         </div>
 
@@ -74,8 +96,15 @@ export function App({ sensor, storage, clock }: AppProps) {
           <Card id="settings" title="Material & thresholds" subtitle="Per-material humidity limits">
             <MaterialSettings settings={state.settings} onMaterial={fg.setMaterial} onThreshold={fg.setThreshold} />
           </Card>
-          <Card id="simulator" title="Sensor simulator" subtitle="Feeds the same monitoring engine a physical sensor will use" action={<Pill tone="warn">NO HARDWARE</Pill>}>
-            <SimulatorPanel provider={sensor} sim={sim} settings={state.settings} onReset={() => setConfirmReset(true)} />
+          <Card id="source" title={isHardware ? 'Hardware sensor' : 'Sensor simulator'}
+            subtitle={isHardware ? 'Polls an HTTP endpoint using the sensor reading contract' : 'Feeds the same monitoring engine a physical sensor will use'}
+            action={<Pill tone="warn">{isHardware ? 'MOCK-TESTED ONLY' : 'NO HARDWARE'}</Pill>}>
+            <div className="space-y-4">
+              {hardware && <SourceToggle mode={mode} hardwareAvailable={!!hardware} onChange={switchMode} />}
+              {isHardware
+                ? <DevicePanel state={hw} onApplyUrl={applyUrl} onReset={() => setConfirmReset(true)} />
+                : <SimulatorPanel provider={sensor} sim={sim} settings={state.settings} onReset={() => setConfirmReset(true)} />}
+            </div>
           </Card>
         </div>
 
@@ -84,7 +113,9 @@ export function App({ sensor, storage, clock }: AppProps) {
         </Card>
 
         <footer className="pb-6 pt-2 text-center text-xs text-slate-400">
-          FilamentGuard prototype: all data is simulated. No ESP32 or DHT11 hardware is connected.
+          {isHardware
+            ? 'FilamentGuard prototype: hardware mode reads an HTTP endpoint that has only been tested against a mock. No real ESP32 or DHT11 has been verified.'
+            : 'FilamentGuard prototype: all data is simulated. No ESP32 or DHT11 hardware is connected.'}
         </footer>
       </main>
 

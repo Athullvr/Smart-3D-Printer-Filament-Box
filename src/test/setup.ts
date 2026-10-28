@@ -9,15 +9,17 @@ class ResizeObserverStub {
 }
 globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver
 
-for (const prop of ['clientWidth', 'clientHeight', 'offsetWidth', 'offsetHeight'] as const)
-  Object.defineProperty(HTMLElement.prototype, prop, { configurable: true, get: () => 600 })
+if (typeof HTMLElement !== 'undefined') {
+  for (const prop of ['clientWidth', 'clientHeight', 'offsetWidth', 'offsetHeight'] as const)
+    Object.defineProperty(HTMLElement.prototype, prop, { configurable: true, get: () => 600 })
 
-HTMLElement.prototype.getBoundingClientRect = () =>
-  ({ width: 600, height: 300, top: 0, left: 0, right: 600, bottom: 300, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect
+  HTMLElement.prototype.getBoundingClientRect = () =>
+    ({ width: 600, height: 300, top: 0, left: 0, right: 600, bottom: 300, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect
+}
 
 afterEach(() => {
   cleanup()
-  localStorage.clear()
+  if (typeof localStorage !== 'undefined') localStorage.clear()
 })
 
 // jsdom has no layout; with stubbed element sizes Recharts emits duplicate axis-tick keys. Test-env artifact only.

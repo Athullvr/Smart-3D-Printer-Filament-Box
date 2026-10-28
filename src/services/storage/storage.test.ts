@@ -63,6 +63,21 @@ describe('storage service', () => {
     expect(throwing.clear()).toBe(false)
     expect(() => throwing.load()).not.toThrow()
   })
+  it('persists connection prefs, ignores invalid ones, defaults event source, and keeps prefs on clear', () => {
+    const b = new MemoryBackend()
+    const s = createStorageService(b)
+    s.saveConnection({ mode: 'hardware', endpointUrl: 'http://192.168.1.50/api/reading' })
+    expect(createStorageService(b).load().connection).toEqual({ mode: 'hardware', endpointUrl: 'http://192.168.1.50/api/reading' })
+    b.setItem('filamentguard:v1:connection', JSON.stringify({ mode: 'bogus', endpointUrl: 'javascript:alert(1)' }))
+    expect(createStorageService(b).load().connection).toEqual({})
+    s.saveConnection({ mode: 'hardware', endpointUrl: 'http://x/api/reading' })
+    const legacy = { ...ev(), source: undefined }
+    b.setItem('filamentguard:v1:events', JSON.stringify([legacy]))
+    expect(s.load().events[0]?.source).toBe('simulated')
+    s.clear()
+    expect(s.load().connection.mode).toBe('hardware')
+    expect(b.getItem('filamentguard:v1:events')).toBeNull()
+  })
   it('clear removes all keys', () => {
     const b = new MemoryBackend()
     const s = createStorageService(b)

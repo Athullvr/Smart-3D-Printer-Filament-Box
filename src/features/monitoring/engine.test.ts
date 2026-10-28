@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { acknowledge, applyReading, eventDurationMs, evaluateHumidity, getActiveEvent, isBuzzerActive, reevaluate, validateReading } from './engine'
+import { acknowledge, applyReading, changeSource, eventDurationMs, evaluateHumidity, getActiveEvent, isBuzzerActive, reevaluate, validateReading } from './engine'
 import { freshMonitor, reading, settingsFor } from '../../test/helpers'
 
 const pla = settingsFor('PLA') // threshold 35
@@ -137,5 +137,39 @@ describe('duration', () => {
     expect(eventDurationMs(active, 500)).toBe(0)
     s = applyReading(s, reading(10, 9000), pla)
     expect(eventDurationMs(s.events[0]!, 99999)).toBe(8000)
+  })
+})
+
+describe('source awareness (hardware integration)', () => {
+  const hw = (h: number | null, t: number, error?: string) => ({ ...reading(h, t), source: 'esp32-dht11' as const, ...(error ? { error } : {}) })
+
+  it('events record the source of the reading that opened them', () => {
+    expect(applyReading(freshMonitor(), reading(50, 1), pla).events[0]?.source).toBe('simulated')
+    expect(applyReading(freshMonitor(), hw(50, 1), pla).events[0]?.source).toBe('esp32-dht11')
+  })
+  it('uses the provider-supplied error text for unavailable readings, and still never reports safe', () => {
+    const s = applyReading(freshMonitor(), hw(null, 1, 'Cannot reach sensor endpoint: HTTP 503.'), pla)
+    expect(s.status).toBe('unavailable')
+    expect(s.error).toBe('Cannot reach sensor endpoint: HTTP 503.')
+  })
+  it('the same hardware measurement delivered repeatedly never duplicates an event', () => {
+    let s = freshMonitor()
+    for (let i = 0; i < 5; i++) s = applyReading(s, hw(50, 100), pla)
+    expect(s.events).toHaveLength(1)
+  })
+  it('changeSource closes an active event from another source, keeps history, and resets live status', () => {
+    let s = applyReading(freshMonitor(), reading(50, 1000), pla)
+    s = acknowledge(s, 1500)
+    const c = changeSource(s, 'esp32-dht11', 4000)
+    expect(c.status).toBe('no-data')
+    expect(c.lastValid).toBeNull()
+    expect(c.events[0]).toMatchObject({ state: 'closed', endedAt: 4000, peakHumidity: 50, acknowledged: true, source: 'simulated' })
+    expect(isBuzzerActive(c.events)).toBe(false)
+  })
+  it('changeSource keeps an active event of the same source open (refresh during a breach)', () => {
+    const s = applyReading(freshMonitor(), reading(50, 1000), pla)
+    const c = changeSource(s, 'simulated', 5000)
+    expect(c.events[0]?.state).toBe('active')
+    expect(c.status).toBe('no-data')
   })
 })
