@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useReducer, useRef, useState, useSyncE
 import type { Material } from '../types'
 import type { SensorProvider } from '../services/sensor/types'
 import type { SimulatedSensorProvider } from '../services/sensor/simulatedSensor'
+import type { HttpSensorProvider } from '../services/sensor/httpSensor'
 import type { StorageService } from '../services/storage/storage'
 import { appReducer, initAppState } from '../features/monitoring/appState'
 
@@ -23,7 +24,12 @@ export function useFilamentGuard({ sensor, storage, clock = Date.now, onReset }:
 
   // Sensor wiring: readings flow provider -> reducer (engine). Cleanup makes Strict Mode remounts safe;
   // duplicate events are impossible because the engine only opens an event when none is active.
+  // When the active provider changes (simulation <-> hardware) any open event from the other source
+  // is closed and live status/chart samples restart; event history is kept.
+  const previousSensor = useRef<SensorProvider | null>(null)
   useEffect(() => {
+    dispatch({ type: 'sourceChanged', source: sensor.source, now: clockRef.current(), clearSamples: previousSensor.current !== null && previousSensor.current !== sensor })
+    previousSensor.current = sensor
     const unsub = sensor.subscribe((reading) => dispatch({ type: 'reading', reading }))
     sensor.start()
     return () => {
@@ -71,4 +77,9 @@ export function useSimulator(provider: SimulatedSensorProvider, storage: Storage
     storage.saveSimulator({ humidity: sim.humidity, temperature: sim.temperature })
   }, [storage, sim.humidity, sim.temperature])
   return sim
+}
+
+/** React binding for the HTTP sensor provider's connection state. */
+export function useHardware(provider: HttpSensorProvider) {
+  return useSyncExternalStore(provider.subscribeState, provider.getState)
 }

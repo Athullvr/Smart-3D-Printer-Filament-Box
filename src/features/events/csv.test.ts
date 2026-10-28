@@ -4,7 +4,7 @@ import type { BreachEvent } from '../../types'
 
 const base: BreachEvent = {
   id: 'EVT-0001', startedAt: Date.UTC(2026, 0, 1, 10, 0, 0), endedAt: Date.UTC(2026, 0, 1, 10, 1, 30), peakHumidity: 47.5,
-  material: 'PETG', threshold: 25, acknowledged: true, acknowledgedAt: Date.UTC(2026, 0, 1, 10, 0, 20), state: 'closed',
+  material: 'PETG', threshold: 25, source: 'simulated', acknowledged: true, acknowledgedAt: Date.UTC(2026, 0, 1, 10, 0, 20), state: 'closed',
 }
 
 describe('csv export', () => {

@@ -35,7 +35,7 @@ export function eventsToCsv(events: BreachEvent[], now: number): string {
       e.threshold,
       e.acknowledged ? 'yes' : 'no',
       iso(e.acknowledgedAt),
-      'simulated',
+      e.source === 'esp32-dht11' ? 'esp32-dht11' : 'simulated',
     ].map(escapeCsv).join(','),
   )
   return [CSV_HEADERS.join(','), ...rows].join('\r\n') + '\r\n'

@@ -1,4 +1,5 @@
-import { MATERIALS, type BreachEvent, type Material, type Sample, type Settings } from '../../types'
+import { MATERIALS, type BreachEvent, type Material, type Sample, type Settings, type SourceMode } from '../../types'
+import { isValidEndpointUrl } from '../sensor/contract'
 import { createDefaultSettings, isValidThreshold } from '../../features/settings/defaults'
 
 export const MAX_SAMPLES = 120
@@ -9,11 +10,17 @@ export interface SimulatorSnapshot {
   temperature: number
 }
 
+export interface ConnectionPrefs {
+  mode: SourceMode
+  endpointUrl: string
+}
+
 export interface LoadedData {
   settings: Settings
   samples: Sample[]
   events: BreachEvent[]
   simulator: Partial<SimulatorSnapshot>
+  connection: Partial<ConnectionPrefs>
   warnings: string[]
 }
 
@@ -24,6 +31,7 @@ export interface StorageService {
   saveSamples(s: Sample[]): boolean
   saveEvents(e: BreachEvent[]): boolean
   saveSimulator(s: SimulatorSnapshot): boolean
+  saveConnection(c: ConnectionPrefs): boolean
   clear(): boolean
 }
 
@@ -39,6 +47,7 @@ const KEYS = {
   samples: 'filamentguard:v1:samples',
   events: 'filamentguard:v1:events',
   simulator: 'filamentguard:v1:simulator',
+  connection: 'filamentguard:v1:connection',
 } as const
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
@@ -73,6 +82,7 @@ export function parseEvent(v: unknown): BreachEvent | null {
     acknowledged: v.acknowledged === true,
     acknowledgedAt: isNum(v.acknowledgedAt) ? v.acknowledgedAt : null,
     state: v.state,
+    source: v.source === 'esp32-dht11' ? 'esp32-dht11' : 'simulated',
   }
 }
 
@@ -137,16 +147,24 @@ export function createStorageService(backend: KeyValueBackend | null): StorageSe
         if (isNum(rawSim.humidity)) simulator.humidity = rawSim.humidity
         if (isNum(rawSim.temperature)) simulator.temperature = rawSim.temperature
       }
-      return { settings, samples, events, simulator, warnings }
+      const rawConn = read(KEYS.connection, warnings)
+      const connection: Partial<ConnectionPrefs> = {}
+      if (isObj(rawConn)) {
+        if (rawConn.mode === 'simulation' || rawConn.mode === 'hardware') connection.mode = rawConn.mode
+        if (typeof rawConn.endpointUrl === 'string' && isValidEndpointUrl(rawConn.endpointUrl)) connection.endpointUrl = rawConn.endpointUrl
+      }
+      return { settings, samples, events, simulator, connection, warnings }
     },
     saveSettings: (s) => write(KEYS.settings, s),
     saveSamples: (s) => write(KEYS.samples, s.slice(-MAX_SAMPLES)),
     saveEvents: (e) => write(KEYS.events, e.slice(0, MAX_EVENTS)),
     saveSimulator: (s) => write(KEYS.simulator, s),
+    saveConnection: (c) => write(KEYS.connection, c),
     clear() {
       if (!backend) return false
       try {
-        Object.values(KEYS).forEach((k) => backend.removeItem(k))
+        // Connection preferences (mode/endpoint) are not demo data and survive reset.
+        Object.entries(KEYS).forEach(([name, k]) => name !== 'connection' && backend.removeItem(k))
         return true
       } catch {
         return false

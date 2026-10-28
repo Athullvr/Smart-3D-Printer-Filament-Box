@@ -1,7 +1,7 @@
-import type { Material, MonitorState, Sample, SensorReading, Settings } from '../../types'
+import type { DataSource, Material, MonitorState, Sample, SensorReading, Settings } from '../../types'
 import type { LoadedData } from '../../services/storage/storage'
 import { createDefaultSettings, isValidThreshold } from '../settings/defaults'
-import { acknowledge, applyReading, createInitialMonitorState, reevaluate, validateReading } from './engine'
+import { acknowledge, applyReading, changeSource, createInitialMonitorState, reevaluate, validateReading } from './engine'
 import { MAX_SAMPLES } from '../../services/storage/storage'
 
 export interface AppState {
@@ -15,6 +15,7 @@ export type AppAction =
   | { type: 'setMaterial'; material: Material; now: number }
   | { type: 'setThreshold'; material: Material; value: number; now: number }
   | { type: 'acknowledge'; now: number }
+  | { type: 'sourceChanged'; source: DataSource; now: number; clearSamples: boolean }
   | { type: 'reset' }
 
 export const initAppState = (loaded: Pick<LoadedData, 'settings' | 'samples' | 'events'>): AppState => ({
@@ -48,6 +49,8 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     }
     case 'acknowledge':
       return { ...state, monitor: acknowledge(state.monitor, action.now) }
+    case 'sourceChanged':
+      return { ...state, monitor: changeSource(state.monitor, action.source, action.now), samples: action.clearSamples ? [] : state.samples }
     case 'reset':
       return { settings: createDefaultSettings(), monitor: createInitialMonitorState(), samples: [] }
   }

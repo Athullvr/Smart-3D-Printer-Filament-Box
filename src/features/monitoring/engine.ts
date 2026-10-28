@@ -22,7 +22,7 @@ export function validateReading(reading: SensorReading | null | undefined): Read
   if (typeof reading.timestamp !== 'number' || !Number.isFinite(reading.timestamp))
     return { ok: false, reason: 'Reading has an invalid timestamp.' }
   const h = reading.humidity
-  if (h === null || h === undefined || typeof h !== 'number') return { ok: false, reason: 'Humidity value unavailable.' }
+  if (h === null || h === undefined || typeof h !== 'number') return { ok: false, reason: reading.error || 'Humidity value unavailable.' }
   if (!Number.isFinite(h)) return { ok: false, reason: 'Humidity value is not a finite number.' }
   if (h < HUMIDITY_RANGE.min || h > HUMIDITY_RANGE.max)
     return { ok: false, reason: `Humidity ${h} is outside the valid 0-100 %RH range.` }
@@ -95,6 +95,7 @@ export function applyReading(state: MonitorState, reading: SensorReading, settin
       acknowledged: false,
       acknowledgedAt: null,
       state: 'active',
+      source: reading.source,
     }
     return { ...state, ...base, status: 'breach', events: [event, ...state.events], nextSeq: state.nextSeq + 1 }
   }
@@ -119,6 +120,17 @@ export function acknowledge(state: MonitorState, now: number): MonitorState {
   const active = getActiveEvent(state.events)
   if (!active || active.acknowledged) return state
   return { ...state, events: replaceEvent(state.events, active.id, { acknowledged: true, acknowledgedAt: now }) }
+}
+
+/**
+ * The data source changed (simulation <-> hardware) or the app (re)started with a given source.
+ * An event cannot span sources: an active event from another source is closed at `now`.
+ * Live status is reset to 'no-data' until the new source delivers a reading. Event history is kept.
+ */
+export function changeSource(state: MonitorState, source: BreachEvent['source'], now: number): MonitorState {
+  const active = getActiveEvent(state.events)
+  const events = active && active.source !== source ? replaceEvent(state.events, active.id, { state: 'closed', endedAt: Math.max(now, active.startedAt) }) : state.events
+  return { ...state, events, status: 'no-data', lastReading: null, lastValid: null, error: null }
 }
 
 export const eventDurationMs = (e: BreachEvent, now: number): number =>

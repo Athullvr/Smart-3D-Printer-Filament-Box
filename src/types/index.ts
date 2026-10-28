@@ -16,6 +16,11 @@ export interface SensorReading {
   temperature: number | null
   timestamp: number
   source: DataSource
+  /** Human-readable reason when humidity is null (sensor fault, disconnect, stale data...). */
+  error?: string
+  deviceId?: string
+  /** Device-reported measurement time (epoch ms). `timestamp` is the browser receive/creation time. */
+  measuredAt?: number
 }
 
 /** A validated humidity/temperature sample kept for charting. */
@@ -37,6 +42,8 @@ export interface BreachEvent {
   acknowledged: boolean
   acknowledgedAt: number | null
   state: EventState
+  /** Data source that produced the readings which opened this event. */
+  source: DataSource
 }
 
 export type SystemStatus = 'no-data' | 'safe' | 'breach' | 'unavailable'
@@ -51,3 +58,5 @@ export interface MonitorState {
   error: string | null
   nextSeq: number
 }
+
+export type SourceMode = 'simulation' | 'hardware'

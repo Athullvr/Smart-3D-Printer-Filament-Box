@@ -4,7 +4,8 @@ import { Pill } from '../../components/ui'
 import { getThreshold } from '../settings/defaults'
 import { formatTime } from '../../utils/format'
 
-export function MetricCards({ monitor, settings }: { monitor: MonitorState; settings: Settings }) {
+export function MetricCards({ monitor, settings, hardware = false }: { monitor: MonitorState; settings: Settings; hardware?: boolean }) {
+  const tag = hardware ? 'HARDWARE FEED' : 'SIMULATED'
   const r = monitor.lastReading
   const unavailable = monitor.status === 'unavailable'
   const h = !unavailable && r ? r.humidity : null
@@ -17,7 +18,7 @@ export function MetricCards({ monitor, settings }: { monitor: MonitorState; sett
       <div className="rounded-lg border border-ink-700 bg-ink-850 p-4" data-testid="humidity-card">
         <div className="flex items-center justify-between text-sm text-slate-400">
           <span className="flex items-center gap-2"><Droplets className="h-4 w-4 text-sensor" aria-hidden />Relative humidity</span>
-          <Pill tone="sensor">SIMULATED</Pill>
+          <Pill tone="sensor">{tag}</Pill>
         </div>
         <p className={`mt-3 font-mono text-4xl font-semibold ${tone}`} data-testid="humidity-value">
           {h === null ? '--' : h.toFixed(1)}<span className="ml-1 text-lg text-slate-400">% RH</span>
@@ -30,7 +31,7 @@ export function MetricCards({ monitor, settings }: { monitor: MonitorState; sett
       <div className="rounded-lg border border-ink-700 bg-ink-850 p-4" data-testid="temperature-card">
         <div className="flex items-center justify-between text-sm text-slate-400">
           <span className="flex items-center gap-2"><Thermometer className="h-4 w-4 text-sensor" aria-hidden />Temperature</span>
-          <Pill tone="sensor">SIMULATED</Pill>
+          <Pill tone="sensor">{tag}</Pill>
         </div>
         <p className="mt-3 font-mono text-4xl font-semibold text-sensor" data-testid="temperature-value">
           {t === null ? '--' : t.toFixed(1)}<span className="ml-1 text-lg text-slate-400">°C</span>

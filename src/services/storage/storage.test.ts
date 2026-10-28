@@ -4,7 +4,7 @@ import { MemoryBackend } from '../../test/helpers'
 import type { BreachEvent } from '../../types'
 
 const ev = (over: Partial<BreachEvent> = {}): BreachEvent => ({
-  id: 'EVT-0001', startedAt: 1, endedAt: null, peakHumidity: 50, material: 'PLA', threshold: 35, acknowledged: false, acknowledgedAt: null, state: 'active', ...over,
+  id: 'EVT-0001', startedAt: 1, endedAt: null, peakHumidity: 50, material: 'PLA', threshold: 35, source: 'simulated', acknowledged: false, acknowledgedAt: null, state: 'active', ...over,
 })
 
 describe('storage service', () => {

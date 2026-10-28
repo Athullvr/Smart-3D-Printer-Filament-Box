@@ -11,7 +11,7 @@ const THEME = {
   'no-data': 'border-ink-600 bg-ink-800',
 } as const
 
-export function StatusBanner({ monitor, settings, onAcknowledge }: { monitor: MonitorState; settings: Settings; onAcknowledge: () => void }) {
+export function StatusBanner({ monitor, settings, onAcknowledge, hardware = false }: { monitor: MonitorState; settings: Settings; onAcknowledge: () => void; hardware?: boolean }) {
   const threshold = getThreshold(settings)
   const active = getActiveEvent(monitor.events)
   const buzzer = isBuzzerActive(monitor.events)
@@ -30,7 +30,7 @@ export function StatusBanner({ monitor, settings, onAcknowledge }: { monitor: Mo
     detail = `Humidity is above the ${settings.material} threshold of ${threshold}% RH.`
   } else if (status === 'unavailable') {
     icon = <ServerCrash className="h-6 w-6 text-warn" aria-hidden />
-    title = 'SENSOR DATA ERROR'
+    title = hardware && monitor.error?.includes('Cannot reach') ? 'SENSOR DISCONNECTED' : hardware && monitor.error?.includes('stale') ? 'SENSOR DATA STALE' : 'SENSOR DATA ERROR'
     detail = `${monitor.error ?? 'Sensor data unavailable.'} Storage condition cannot be confirmed.`
   }
 
@@ -41,6 +41,7 @@ export function StatusBanner({ monitor, settings, onAcknowledge }: { monitor: Mo
         <div>
           <p className="text-lg font-semibold tracking-wide">{title}</p>
           <p className="text-sm text-slate-300">{detail}</p>
+          {active && hardware && <p className="mt-1 text-xs text-slate-400">Acknowledging here only affects this dashboard; the ESP32's own buzzer is controlled by its firmware.</p>}
           {active && (
             <p className="mt-1 text-xs text-slate-400">
               Open event <span className="font-mono">{active.id}</span> is still being monitored{status === 'unavailable' ? ' (state unconfirmed while sensor data is unavailable)' : ''}.
@@ -52,7 +53,7 @@ export function StatusBanner({ monitor, settings, onAcknowledge }: { monitor: Mo
         <div className="flex flex-col gap-2 sm:items-end">
           <span data-testid="buzzer-state" data-active={buzzer} className={`inline-flex items-start gap-1.5 text-sm font-medium ${buzzer ? 'text-breach' : 'text-slate-400'}`}>
             {buzzer ? <BellRing className="mt-0.5 h-4 w-4 shrink-0" aria-hidden /> : <BellOff className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />}
-            {buzzer ? 'Buzzer (simulated): SOUNDING' : 'Buzzer (simulated): SILENCED'}
+            {hardware ? (buzzer ? 'Dashboard alert: ACTIVE' : 'Dashboard alert: ACKNOWLEDGED') : buzzer ? 'Buzzer (simulated): SOUNDING' : 'Buzzer (simulated): SILENCED'}
           </span>
           <Button variant="danger" className="w-full sm:w-auto" onClick={onAcknowledge} disabled={!buzzer}>
             {buzzer ? 'Acknowledge alert' : 'Acknowledged'}

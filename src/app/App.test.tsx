@@ -215,6 +215,33 @@ describe('simulation controls', () => {
   })
 })
 
+describe('accessibility', () => {
+  it('reset dialog: focuses inside, traps Tab, closes on Escape and restores focus', async () => {
+    const user = userEvent.setup()
+    mount()
+    const trigger = screen.getByRole('button', { name: /reset demo/i })
+    await user.click(trigger)
+    const dialog = screen.getByRole('dialog')
+    expect(dialog).toHaveAccessibleName('Reset demo?')
+    expect(dialog).toContainElement(document.activeElement as HTMLElement)
+    await user.tab(); await user.tab()
+    expect(dialog).toContainElement(document.activeElement as HTMLElement)
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(trigger).toHaveFocus()
+  })
+  it('exposes labelled controls, a skip link, and per-cell labels for the stacked event layout', async () => {
+    mount()
+    expect(screen.getByRole('link', { name: /skip to content/i })).toHaveAttribute('href', '#main')
+    expect(screen.getByLabelText('Stored material')).toBeInTheDocument()
+    expect(slider()).toHaveAttribute('aria-valuetext')
+    fireEvent.click(screen.getByRole('button', { name: /trigger breach/i }))
+    expect(within(rows()[0]!).getAllByRole('cell').map((c) => c.getAttribute('data-label'))).toEqual(
+      ['Event', 'Start', 'End', 'Duration', 'Peak', 'Material', 'Acknowledged'])
+    expect(screen.getByTestId('status-banner')).toHaveAttribute('aria-live', 'polite')
+  })
+})
+
 describe('CSV export', () => {
   it('13. downloads a CSV containing the recorded event', async () => {
     const user = userEvent.setup()

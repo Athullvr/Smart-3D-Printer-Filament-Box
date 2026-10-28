@@ -4,7 +4,7 @@ import { Pill } from '../../components/ui'
 import { getThreshold } from '../settings/defaults'
 import { formatTime } from '../../utils/format'
 
-export function HumidityChart({ samples, settings }: { samples: Sample[]; settings: Settings }) {
+export function HumidityChart({ samples, settings, hardware = false }: { samples: Sample[]; settings: Settings; hardware?: boolean }) {
   const threshold = getThreshold(settings)
   const history = samples.slice(0, -1)
   const current = samples[samples.length - 1]
@@ -15,14 +15,14 @@ export function HumidityChart({ samples, settings }: { samples: Sample[]; settin
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400">
-        <Pill tone="sensor">SIMULATED DATA</Pill>
+        <Pill tone="sensor">{hardware ? 'HARDWARE FEED (UNVERIFIED)' : 'SIMULATED DATA'}</Pill>
         <span className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-sensor" />Humidity history ({history.length})</span>
         <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full border-2 border-white bg-sensor" />Current</span>
         <span className="flex items-center gap-1.5"><span className="w-4 border-t-2 border-dashed border-breach" />{settings.material} limit {threshold}% RH</span>
       </div>
       {samples.length === 0 ? (
         <div className="flex h-64 items-center justify-center rounded-md border border-dashed border-ink-600 text-center text-sm text-slate-400" data-testid="chart-empty">
-          No humidity readings yet. Readings from the simulator will appear here.
+          No humidity readings yet. Readings from the active source will appear here.
         </div>
       ) : (
         <div className="h-64 w-full sm:h-72" data-testid="humidity-chart" role="img" aria-label={`Line chart of ${samples.length} simulated humidity readings against the ${settings.material} limit of ${threshold} percent RH. Latest: ${current?.humidity.toFixed(1)} percent RH.`}>
