@@ -32,7 +32,8 @@ export function App({ sensor, storage, clock }: AppProps) {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-40 border-b border-ink-700 bg-ink-900/95 backdrop-blur">
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-sensor focus:px-3 focus:py-2 focus:text-ink-950">Skip to content</a>
+      <header className="lg:sticky lg:top-0 z-40 border-b border-ink-700 bg-ink-900/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
           <div className="flex items-center gap-2.5">
             <ShieldCheck className="h-7 w-7 text-sensor" aria-hidden />
@@ -41,8 +42,8 @@ export function App({ sensor, storage, clock }: AppProps) {
               <p className="text-xs text-slate-400">Smart Filament Storage Monitor</p>
             </div>
           </div>
-          <nav aria-label="Primary" className="order-3 -mx-1 flex w-full gap-1 overflow-x-auto sm:order-none sm:mx-0 sm:w-auto">
-            {NAV.map((n) => <a key={n.href} href={n.href} className="rounded px-2.5 py-1.5 text-sm text-slate-300 hover:bg-ink-800 hover:text-white">{n.label}</a>)}
+          <nav aria-label="Primary" className="order-3 grid w-full grid-cols-4 gap-1 text-center text-xs sm:order-none sm:flex sm:w-auto sm:text-sm">
+            {NAV.map((n) => <a key={n.href} href={n.href} className="rounded px-2.5 py-2 text-slate-300 hover:bg-ink-800 hover:text-white">{n.label}</a>)}
           </nav>
           <div className="ml-auto flex flex-wrap items-center gap-2">
             <span className="text-sm text-slate-300">Dry Box Unit 01</span>
@@ -53,7 +54,7 @@ export function App({ sensor, storage, clock }: AppProps) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl space-y-4 px-4 py-4">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-6xl space-y-4 px-4 py-4">
         {fg.storageMessages.length > 0 && (
           <div role="alert" data-testid="storage-warning" className="flex items-start gap-2 rounded-lg border border-warn/40 bg-warn/10 p-3 text-sm text-warn">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
@@ -82,7 +83,7 @@ export function App({ sensor, storage, clock }: AppProps) {
           <EventHistory events={state.monitor.events} now={now} />
         </Card>
 
-        <footer className="pb-6 pt-2 text-center text-xs text-slate-500">
+        <footer className="pb-6 pt-2 text-center text-xs text-slate-400">
           FilamentGuard prototype: all data is simulated. No ESP32 or DHT11 hardware is connected.
         </footer>
       </main>

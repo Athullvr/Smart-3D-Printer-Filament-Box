@@ -25,7 +25,7 @@ export function MetricCards({ monitor, settings }: { monitor: MonitorState; sett
         <p className="mt-2 text-xs text-slate-400">
           Limit for {settings.material}: <span className="font-mono text-slate-200">{threshold}% RH</span> (provisional)
         </p>
-        <p className="mt-1 text-xs text-slate-500">{r && !unavailable ? `Updated ${formatTime(r.timestamp)}` : unavailable ? 'Sensor data unavailable' : 'No reading yet'}</p>
+        <p className="mt-1 text-xs text-slate-400">{r && !unavailable ? `Updated ${formatTime(r.timestamp)}` : unavailable ? 'Sensor data unavailable' : 'No reading yet'}</p>
       </div>
       <div className="rounded-lg border border-ink-700 bg-ink-850 p-4" data-testid="temperature-card">
         <div className="flex items-center justify-between text-sm text-slate-400">
@@ -36,7 +36,7 @@ export function MetricCards({ monitor, settings }: { monitor: MonitorState; sett
           {t === null ? '--' : t.toFixed(1)}<span className="ml-1 text-lg text-slate-400">°C</span>
         </p>
         <p className="mt-2 text-xs text-slate-400">Informational only; no temperature threshold is configured.</p>
-        <p className="mt-1 text-xs text-slate-500">{r && !unavailable ? `Updated ${formatTime(r.timestamp)}` : 'No reading'}</p>
+        <p className="mt-1 text-xs text-slate-400">{r && !unavailable ? `Updated ${formatTime(r.timestamp)}` : 'No reading'}</p>
       </div>
     </div>
   )

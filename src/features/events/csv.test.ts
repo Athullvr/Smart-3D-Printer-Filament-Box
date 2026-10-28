@@ -20,6 +20,10 @@ describe('csv export', () => {
     expect(row[4]).toBe('12')
     expect(row[8]).toBe('no')
   })
+  it('floors duration to whole seconds, matching the UI formatter', () => {
+    const e: BreachEvent = { ...base, endedAt: base.startedAt + 1999 }
+    expect(eventsToCsv([e], 0).split('\r\n')[1]!.split(',')[4]).toBe('1')
+  })
   it('escapes commas, quotes and newlines', () => {
     expect(escapeCsv('a,b')).toBe('"a,b"')
     expect(escapeCsv('say "hi"')).toBe('"say ""hi"""')

@@ -248,11 +248,11 @@ describe('live durations and responsive layout', () => {
     act(() => void vi.advanceTimersByTime(1000))
     expect(rows()[0]).toHaveTextContent('1m 05s')
   })
-  it('uses responsive containers: scrollable table wrapper, stacking grids, scrollable nav', () => {
+  it('uses responsive containers: scrollable table wrapper, stacking grids, 4-column mobile nav', () => {
     mount()
     fireEvent.click(screen.getByRole('button', { name: /trigger breach/i }))
     expect(screen.getByTestId('events-table').parentElement).toHaveClass('overflow-x-auto')
-    expect(screen.getByRole('navigation', { name: 'Primary' })).toHaveClass('overflow-x-auto')
+    expect(screen.getByRole('navigation', { name: 'Primary' })).toHaveClass('grid-cols-4')
     expect(screen.getByTestId('humidity-card').parentElement).toHaveClass('grid-cols-1', 'sm:grid-cols-2')
   })
 })

@@ -37,7 +37,7 @@ export function StatusBanner({ monitor, settings, onAcknowledge }: { monitor: Mo
   return (
     <div role="status" aria-live="polite" data-testid="status-banner" data-status={status} className={`flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between ${THEME[status]}`}>
       <div className="flex items-start gap-3">
-        <div className="mt-0.5">{icon}</div>
+        <div className="mt-0.5 shrink-0">{icon}</div>
         <div>
           <p className="text-lg font-semibold tracking-wide">{title}</p>
           <p className="text-sm text-slate-300">{detail}</p>
@@ -49,12 +49,12 @@ export function StatusBanner({ monitor, settings, onAcknowledge }: { monitor: Mo
         </div>
       </div>
       {active && (
-        <div className="flex items-center gap-3 sm:flex-col sm:items-end">
-          <span data-testid="buzzer-state" data-active={buzzer} className={`inline-flex items-center gap-1.5 text-sm font-medium ${buzzer ? 'text-breach' : 'text-slate-400'}`}>
-            {buzzer ? <BellRing className="h-4 w-4" aria-hidden /> : <BellOff className="h-4 w-4" aria-hidden />}
+        <div className="flex flex-col gap-2 sm:items-end">
+          <span data-testid="buzzer-state" data-active={buzzer} className={`inline-flex items-start gap-1.5 text-sm font-medium ${buzzer ? 'text-breach' : 'text-slate-400'}`}>
+            {buzzer ? <BellRing className="mt-0.5 h-4 w-4 shrink-0" aria-hidden /> : <BellOff className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />}
             {buzzer ? 'Buzzer (simulated): SOUNDING' : 'Buzzer (simulated): SILENCED'}
           </span>
-          <Button variant="danger" onClick={onAcknowledge} disabled={!buzzer}>
+          <Button variant="danger" className="w-full sm:w-auto" onClick={onAcknowledge} disabled={!buzzer}>
             {buzzer ? 'Acknowledge alert' : 'Acknowledged'}
           </Button>
         </div>

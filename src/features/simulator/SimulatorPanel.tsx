@@ -15,15 +15,15 @@ export function SimulatorPanel({ provider, sim, settings, onReset }: {
         <label htmlFor="sim-humidity" className="flex justify-between text-sm text-slate-300">
           <span>Humidity</span><span className="font-mono text-sensor">{sim.humidity.toFixed(1)} % RH</span>
         </label>
-        <input id="sim-humidity" type="range" min={SIM_HUMIDITY.min} max={SIM_HUMIDITY.max} step={0.5} value={sim.humidity}
-          onChange={(e) => provider.setHumidity(Number(e.target.value))} className="mt-2 w-full accent-cyan-400" />
+        <input id="sim-humidity" type="range" min={SIM_HUMIDITY.min} max={SIM_HUMIDITY.max} step={0.5} value={sim.humidity} aria-valuetext={`${sim.humidity.toFixed(1)} percent relative humidity`}
+          onChange={(e) => provider.setHumidity(Number(e.target.value))} className="mt-1 h-8 w-full cursor-pointer accent-cyan-400" />
       </div>
       <div>
         <label htmlFor="sim-temperature" className="flex justify-between text-sm text-slate-300">
           <span>Temperature</span><span className="font-mono text-sensor">{sim.temperature.toFixed(1)} °C</span>
         </label>
-        <input id="sim-temperature" type="range" min={SIM_TEMPERATURE.min} max={SIM_TEMPERATURE.max} step={0.5} value={sim.temperature}
-          onChange={(e) => provider.setTemperature(Number(e.target.value))} className="mt-2 w-full accent-cyan-400" />
+        <input id="sim-temperature" type="range" min={SIM_TEMPERATURE.min} max={SIM_TEMPERATURE.max} step={0.5} value={sim.temperature} aria-valuetext={`${sim.temperature.toFixed(1)} degrees Celsius`}
+          onChange={(e) => provider.setTemperature(Number(e.target.value))} className="mt-1 h-8 w-full cursor-pointer accent-cyan-400" />
       </div>
       <div className="grid grid-cols-2 gap-2">
         <Button onClick={() => provider.setHumidity(Math.max(SIM_HUMIDITY.min, threshold - 8))}><CheckCircle2 className="h-4 w-4 text-safe" aria-hidden />Set safe</Button>
@@ -38,7 +38,7 @@ export function SimulatorPanel({ provider, sim, settings, onReset }: {
             ? <Button variant="primary" onClick={() => provider.stopAuto()}><Square className="h-4 w-4" aria-hidden />Stop auto</Button>
             : <Button variant="primary" onClick={() => provider.startAuto()}><Play className="h-4 w-4" aria-hidden />Start auto</Button>}
         </div>
-        <p className="mt-2 text-xs text-slate-500">Bounded random walk, 1 reading/second. Manual controls stop automatic mode.</p>
+        <p className="mt-2 text-xs text-slate-400">Bounded random walk, 1 reading/second. Manual controls stop automatic mode.</p>
       </div>
       <Button variant="ghost" className="w-full border border-ink-600" onClick={onReset}><RotateCcw className="h-4 w-4" aria-hidden />Reset demo</Button>
     </div>

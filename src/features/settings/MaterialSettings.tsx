@@ -50,7 +50,7 @@ export function MaterialSettings({ settings, onMaterial, onThreshold }: {
         <div className="space-y-2">
           {MATERIALS.map((m) => <ThresholdInput key={m} material={m} value={settings.thresholds[m]} onCommit={(v) => onThreshold(m, v)} />)}
         </div>
-        <p className="mt-3 text-xs text-slate-500">
+        <p className="mt-3 text-xs text-slate-400">
           Demonstration values only, not universal safety limits. Breach when humidity is strictly greater than the threshold; equal is safe.
           Changing a threshold never alters existing events.
         </p>

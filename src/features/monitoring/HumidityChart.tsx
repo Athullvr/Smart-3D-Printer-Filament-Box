@@ -25,7 +25,7 @@ export function HumidityChart({ samples, settings }: { samples: Sample[]; settin
           No humidity readings yet. Readings from the simulator will appear here.
         </div>
       ) : (
-        <div className="h-64 w-full sm:h-72" data-testid="humidity-chart">
+        <div className="h-64 w-full sm:h-72" data-testid="humidity-chart" role="img" aria-label={`Line chart of ${samples.length} simulated humidity readings against the ${settings.material} limit of ${threshold} percent RH. Latest: ${current?.humidity.toFixed(1)} percent RH.`}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 8, right: 16, bottom: 20, left: 4 }}>
               <CartesianGrid stroke="#1e2a44" strokeDasharray="3 3" />

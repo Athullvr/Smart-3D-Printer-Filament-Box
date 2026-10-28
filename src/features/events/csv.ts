@@ -29,7 +29,7 @@ export function eventsToCsv(events: BreachEvent[], now: number): string {
       e.state,
       iso(e.startedAt),
       iso(e.endedAt),
-      Math.round(eventDurationMs(e, now) / 1000),
+      Math.floor(eventDurationMs(e, now) / 1000),
       e.peakHumidity,
       e.material,
       e.threshold,
