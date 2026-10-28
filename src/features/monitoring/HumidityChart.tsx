@@ -8,6 +8,8 @@ export function HumidityChart({ samples, settings }: { samples: Sample[]; settin
   const threshold = getThreshold(settings)
   const history = samples.slice(0, -1)
   const current = samples[samples.length - 1]
+  const first = samples[0]?.timestamp ?? 0
+  const xDomain: [number, number] = current && current.timestamp > first ? [first, current.timestamp] : [first - 30_000, first + 30_000]
   const data = samples.map((s) => ({ t: s.timestamp, humidity: s.humidity }))
 
   return (
@@ -27,7 +29,7 @@ export function HumidityChart({ samples, settings }: { samples: Sample[]; settin
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={data} margin={{ top: 8, right: 16, bottom: 20, left: 4 }}>
               <CartesianGrid stroke="#1e2a44" strokeDasharray="3 3" />
-              <XAxis dataKey="t" type="number" scale="time" domain={['dataMin', 'dataMax']} tickFormatter={formatTime} stroke="#64748b" tick={{ fontSize: 11 }} minTickGap={40}
+              <XAxis dataKey="t" type="number" scale="time" domain={xDomain} allowDataOverflow tickFormatter={formatTime} stroke="#64748b" tick={{ fontSize: 11 }} minTickGap={40}
                 label={{ value: 'Time (local)', position: 'insideBottom', offset: -12, fill: '#94a3b8', fontSize: 11 }} />
               <YAxis domain={[0, 100]} stroke="#64748b" tick={{ fontSize: 11 }} width={44}
                 label={{ value: 'Humidity (% RH)', angle: -90, position: 'insideLeft', fill: '#94a3b8', fontSize: 11, style: { textAnchor: 'middle' } }} />

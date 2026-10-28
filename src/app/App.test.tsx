@@ -226,7 +226,12 @@ describe('CSV export', () => {
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
     await user.click(screen.getByRole('button', { name: /export csv/i }))
     expect(captured).not.toBeNull()
-    const text = await new Response(captured!).text()
+    const blob = captured as unknown as Blob
+    const text = await new Promise<string>((res) => {
+      const fr = new FileReader()
+      fr.onload = () => res(String(fr.result))
+      fr.readAsText(blob)
+    })
     expect(text).toContain('event_id,state,start_time_iso')
     expect(text).toContain('EVT-0001,active,')
     expect(text).toContain(',PLA,35,no,')
