@@ -2,6 +2,7 @@
 //   node tools/mock-esp32.mjs            (or: npm run mock:esp32)   -> http://localhost:8787
 // This is a SIMULATION of the device contract (docs/hardware-integration.md), not real hardware.
 import http from 'node:http'
+import { pathToFileURL } from 'node:url'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -98,7 +99,7 @@ export function createMockEsp32({ now = Date.now, sampleMs = 1000, random = Math
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const port = Number(process.env.PORT ?? 8787)
   const mock = createMockEsp32()
   mock.state.auto = process.env.AUTO !== '0'

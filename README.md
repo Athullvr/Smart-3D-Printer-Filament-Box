@@ -15,6 +15,17 @@ npm run build      # typecheck + production build into dist/
 npm run preview    # serve the production build
 ```
 
+## Hardware mode (Phase 3, mock-tested only)
+
+A second data source reads an HTTP endpoint that follows the sensor reading contract. **It has only been tested against a mock endpoint; no real ESP32 or DHT11 has been connected.** See [docs/hardware-integration.md](docs/hardware-integration.md) for the payload, timeouts, error behavior, mock usage and the checklist for connecting a physical device.
+
+```bash
+npm run mock:esp32   # terminal 1: mock device on http://127.0.0.1:8787
+npm run dev          # terminal 2: choose "Hardware (HTTP)" under Data source
+```
+
+The browser is read-only: device-side monitoring and alerts must live in the firmware. Dashboard "Acknowledge" does not silence a physical buzzer.
+
 ## What is simulated
 
 - **All sensor data.** Humidity and temperature come from `SimulatedSensorProvider` (sliders, quick actions, optional automatic random walk). Every reading is tagged `source: 'simulated'` and the UI shows a "SIMULATION MODE" badge. No hardware is connected.
@@ -23,7 +34,7 @@ npm run preview    # serve the production build
 
 ## What is NOT implemented yet
 
-- ESP32 / DHT11 firmware, Wi-Fi/MQTT/HTTP/WebSocket transport, and a hardware `SensorProvider`.
+- ESP32 / DHT11 firmware and any verification against real hardware. (An HTTP `SensorProvider` and a mock endpoint exist; WebSocket/MQTT do not.)
 - Real audio or buzzer output, push/email notifications, multiple devices.
 - Backend, authentication, cloud sync. Data lives only in this browser's `localStorage`.
 - Validated material limits. Thresholds are **provisional demo values**, not safety limits.
@@ -59,7 +70,7 @@ src/
 
 Data flow: `SensorProvider` -> `dispatch({type:'reading'})` -> `appReducer` -> pure `applyReading` engine -> UI + persistence. The engine has no React, clock, or storage dependencies (timestamps arrive with readings/actions), so duplicate events are impossible by construction, including under React Strict Mode.
 
-**Replacing the simulator with an ESP32:** implement `SensorProvider` (`start`, `stop`, `subscribe`) and emit `SensorReading` objects with `source: 'esp32-dht11'`; the engine and dashboard do not change. (The simulator panel is typed to `SimulatedSensorProvider` and would be hidden for a hardware provider.)
+**Hardware path:** `HttpSensorProvider` implements `SensorProvider` and emits `SensorReading` objects with `source: 'esp32-dht11'`; the engine is unchanged. The simulator panel is shown only in simulation mode.
 
 ## Tests
 
