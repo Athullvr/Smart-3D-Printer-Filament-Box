@@ -55,10 +55,10 @@ export function DryBoxIllustration({ status, material, threshold, hardware }: { 
           <path key={x} d={`M${x} ${88 + (i % 2) * 6} q-3 5 0 8 q3 -3 0 -8`} fill="#D94B40" />
         ))}
       </svg>
-      <figcaption className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-[#B9BDB4]">
+      <figcaption className="mt-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm text-[#B9BDB4]">
         <span data-testid="drybox-state"><strong className="font-semibold text-ivory">Box check:</strong> {LABEL[status]}</span>
         <span>{material} limit {threshold}% RH (provisional)</span>
-        <span className="basis-full text-[#B9BDB4]">Schematic illustration, not a photo of the prototype. {hardware ? 'Hardware mode is mock-tested only.' : 'Values come from the built-in simulator.'}</span>
+        <span className="basis-full text-xs text-[#B9BDB4]">Schematic illustration, not a photo of the prototype. {hardware ? 'Hardware mode is mock-tested only.' : 'Values come from the built-in simulator.'}</span>
       </figcaption>
     </figure>
   )

@@ -64,7 +64,7 @@ export function App({ sensor, hardware, storage, clock }: AppProps) {
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-filament focus:px-3 focus:py-2 focus:font-semibold focus:text-graphite">Skip to content</a>
       <header data-surface="dark" className="z-40 bg-charcoal text-ivory lg:sticky lg:top-0">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
-          <a href="#dashboard" className="flex items-center gap-2.5" onClick={() => setActiveSection('dashboard')}>
+          <a href="#dashboard" className="flex min-h-11 items-center gap-2.5" onClick={() => setActiveSection('dashboard')}>
             <BrandMark />
             <span className="font-display text-2xl font-bold tracking-tight text-ivory">FilamentGuard</span>
           </a>

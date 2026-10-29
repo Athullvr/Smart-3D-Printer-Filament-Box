@@ -4,7 +4,7 @@ export function Card({ title, subtitle, action, children, id, className = '' }: 
   title: string; subtitle?: string; action?: ReactNode; children: ReactNode; id?: string; className?: string
 }) {
   return (
-    <section id={id} aria-labelledby={id ? `${id}-title` : undefined} className={`rounded-md border border-line bg-paper shadow-[0_1px_0_rgba(32,37,34,0.05)] ${className}`}>
+    <section id={id} aria-labelledby={id ? `${id}-title` : undefined} className={`min-w-0 rounded-md border border-line bg-paper shadow-[0_1px_0_rgba(32,37,34,0.05)] ${className}`}>
       <header className="flex flex-wrap items-start justify-between gap-2 border-b border-line px-4 py-3 sm:px-5">
         <div>
           <h2 id={id ? `${id}-title` : undefined} className="font-display text-xl font-semibold leading-tight text-graphite">{title}</h2>
